@@ -123,7 +123,9 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 25px;
+  margin-top: 5px;
+  max-width: 650px;
+  margin: 0 auto;
 
   img {
     width: 50%;
