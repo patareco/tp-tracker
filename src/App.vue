@@ -152,9 +152,11 @@ export default {
       console.log(this.numRollsUpdate);
       let that = this;
       this.updatingRolls = true;
+
+      let updateURL = (process.env.NODE_ENV == 'developement') ? 'http://localhost:9999/' : 'https://tp-tracker-91.netlify.app/'; 
       axios
         .get(
-          "http://localhost:9999/.netlify/functions/addTPRows?number=" +
+          updateURL + ".netlify/functions/addTPRows?number=" +
             this.numRollsUpdate
         )
         .then(function (response) {
