@@ -9,7 +9,7 @@
       <p :class="status + ' status'">{{ status }}</p>
 
       <div v-if="status == 'good'">
-        <span v-for="(item, i) in info.slice(9, 11)" :key="'effort-' + i">
+        <span v-for="(item, i) in info.slice(9, 10)" :key="'effort-' + i">
           {{ item.label.title }}
           <span :class="status + ' hl'">{{ item.value }} </span>
           <b>{{ item.label.unit }}</b>
@@ -107,8 +107,8 @@ export default {
     status() {
       let target = parseFloat(this.target);
       let avg = parseFloat(this.avg);
-      if (avg < target - 0.1) return "good";
-      if (avg >= target - 0.1 && avg <= target + 0.2) return "ok";
+      if (avg <= target) return "good";
+      if (avg > target  && avg <= target + 0.2) return "ok";
       if (avg > target + 0.2) return "bad";
       else return null;
     },
