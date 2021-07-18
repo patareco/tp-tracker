@@ -49,6 +49,29 @@
         </div>
       </div>
 
+      <button @click="openUpdateStatusModal">Update Status</button>
+
+      <div v-if="updateModalShow" id="update-modal">
+        <div v-if="!updatingRolls">
+          <h2>Update Nº Rolls</h2>
+          <input
+            type="number"
+            name="number"
+            placeholder="nº of tp rolls"
+            @keyup.enter="updateRolls"
+            v-model="numRollsUpdate"
+            ref="input"
+          />
+          <button @click="updateRolls">Update</button>
+        </div>
+        <div v-else>
+          <h2>Updating...</h2>
+        </div>
+        <div class="close">
+          <button @click="openUpdateStatusModal">Close</button>
+        </div>
+      </div>
+
       <p>Don't worry, be happy! ❤</p>
     </div>
     <div v-else>
@@ -76,41 +99,82 @@ export default {
       info: null,
       target: null,
       avg: null,
+      updateModalShow: false,
+      numRollsUpdate: false,
+      updatingRolls: false,
     };
   },
   mounted() {
-    var that = this;
-    // Make a request for a user with a given ID
-    axios
-      .get(
-        "https://spreadsheets.google.com/feeds/cells/1FnuA1w242G_PzEfkiDj21FQlFLXFoNNNQ1SJ9gvdf5o/2/public/full?alt=json"
-      )
-      .then(function (response) {
-        // handle success
-        let info = mapSheet(response);
-        that.info = info;
-        that.target = info[0].value;
-        that.avg = info[9].value;
-        that.loading = false;
-        console.log(info);
-      })
-      .catch(function (error) {
-        // handle error
-        console.log(error);
-        that.errored = true;
-      })
-      .then(function () {
-        // always executed
-      });
+    this.getGSData();
   },
   computed: {
     status() {
       let target = parseFloat(this.target);
       let avg = parseFloat(this.avg);
       if (avg <= target) return "good";
-      if (avg > target  && avg <= target + 0.2) return "ok";
-      if (avg > target + 0.2) return "bad";
+      if (avg > target && avg <= target + 0.2) return "ok";
+      if (avg > target + 0.2 && avg <= target + 0.7) return "bad";
+      if (avg > target + 0.7) return "very bad";
       else return null;
+    },
+  },
+  methods: {
+    openUpdateStatusModal() {
+      this.updateModalShow = !this.updateModalShow;
+      if (this.updateModalShow) setTimeout(() => this.$refs.input.focus(), 200);
+    },
+    getGSData() {
+      var that = this;
+      // Make a request for a user with a given ID
+      axios
+        .get(
+          "https://spreadsheets.google.com/feeds/cells/1FnuA1w242G_PzEfkiDj21FQlFLXFoNNNQ1SJ9gvdf5o/2/public/full?alt=json"
+        )
+        .then(function (response) {
+          // handle success
+          let info = mapSheet(response);
+          that.info = info;
+          that.target = info[0].value;
+          that.avg = info[9].value;
+          that.loading = false;
+          console.log(info);
+        })
+        .catch(function (error) {
+          // handle error
+          console.log(error);
+          that.errored = true;
+        })
+        .then(function () {
+          // always executed
+        });
+    },
+    updateRolls() {
+      console.log(this.numRollsUpdate);
+      let that = this;
+      this.updatingRolls = true;
+      axios
+        .get(
+          "http://localhost:9999/.netlify/functions/addTPRows?number=" +
+            this.numRollsUpdate
+        )
+        .then(function (response) {
+          // handle success
+          console.log(response);
+          alert(response.data.status);
+          that.getGSData();
+          that.openUpdateStatusModal();
+        })
+        .catch(function (error) {
+          // handle error
+          alert("Request Failed!");
+          console.log(error);
+        })
+        .then(function () {
+          that.updatingRolls = false;
+          // always executed
+        });
+
+      this.$refs.input.value = "";
     },
   },
 };
@@ -128,7 +192,7 @@ export default {
   margin: 0 auto;
 
   img {
-    width: 50%;
+    width: 30%;
     display: block;
     margin: 0 auto;
   }
@@ -198,5 +262,23 @@ a {
 }
 .bad {
   color: #e83d3d;
+}
+.very.bad {
+  background-color: #e83d3d;
+  color: #fff;
+  padding: 0.15em;
+}
+#update-modal {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background-color: RGBA(255, 255, 255, 0.8);
+}
+.close {
+  margin-top: 2em;
 }
 </style>
